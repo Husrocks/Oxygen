@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oxygen-gym</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" type="image/png" href="favicon.png">
+
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+    <link rel="icon" type="image/png" href="./favicon.png">
+    <!-- <style>
+@import url('https://fonts.googleapis.com/css2?family=Momo+Trust+Display&display=swap');
+</style> -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Badeen+Display&family=Momo+Trust+Display&display=swap');
+</style>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,14 +25,17 @@
             <li><a href="#classes">Classes</a></li>
             <li><a href="#schedule">Schedule</a></li>
             <li><a href="#trainers">Trainers</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="contact.html">Contact</a></li>
         </ul>
-        <div class="hamburger">
+        <!-- <div class="hamburger">
+            
             <span></span>
             <span></span>
             <span></span>
-        </div>
+        </div> -->
         <button class="cta-button">Join Now</button>
+      
+
 
     </nav>
     
@@ -33,7 +43,9 @@
         <div class="hero-content">
             <h1>ELEVATE YOUR <span class="highlight">FITNESS</span></h1>
             <a href="#join" class="cta-button">Start Your Journey</a>
-        </div>
+            
+            
+    </div>
     </div>
 
     <section class="merged-section">
@@ -60,6 +72,7 @@
             </div>
 
             <!-- Bodybuilders Gallery -->
+        
             <div class="image-slider">
                 <div class="image-container">
                     <div class="image-card">
@@ -172,88 +185,22 @@
                     </div>
                 </div>
 
-                <div class="join-cta-wrap">
+                <!-- <div class="join-cta-wrap">
                     <a class="join-cta" href="#contact">
                         <span>Start Today</span>
                     </a>
-                </div>
+                </div> -->
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials-section" id="testimonials">
-        <div class="container">
-            <h2 class="section-title">Success <span class="highlight">Stories</span></h2>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-image">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80" alt="Sarah Johnson" loading="lazy">
-                    </div>
-                    <div class="testimonial-content">
-                        <div class="testimonial-rating">
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="testimonial-text">
-                            "Joining Oxygen was the best decision I've made. Lost 30 pounds in 6 months and gained incredible strength. The trainers are exceptional!"
-                        </blockquote>
-                        <footer class="testimonial-author">
-                            <cite>Sarah Johnson</cite>
-                            <span class="author-title">Member since 2024</span>
-                        </footer>
-                    </div>
-                </div>
 
-                <div class="testimonial-card">
-                    <div class="testimonial-image">
-                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e" alt="Michael Chen" loading="lazy">
-                    </div>
-                    <div class="testimonial-content">
-                        <div class="testimonial-rating">
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="testimonial-text">
-                            "The 24/7 access fits perfectly with my busy schedule. From a beginner to competing in powerlifting - Oxygen made it possible."
-                        </blockquote>
-                        <footer class="testimonial-author">
-                            <cite>Michael Chen</cite>
-                            <span class="author-title">Powerlifting Champion</span>
-                        </footer>
-                    </div>
-                </div>
 
-                <div class="testimonial-card">
-                    <div class="testimonial-image">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330" alt="Emily Rodriguez" loading="lazy">
-                    </div>
-                    <div class="testimonial-content">
-                        <div class="testimonial-rating">
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                            <span class="star" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="testimonial-text">
-                            "The supportive community and expert guidance helped me achieve my fitness goals. I've never felt stronger or more confident!"
-                        </blockquote>
-                        <footer class="testimonial-author">
-                            <cite>Emily Rodriguez</cite>
-                            <span class="author-title">Fitness Enthusiast</span>
-                        </footer>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+
+
+
+   
+    
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -387,48 +334,7 @@
 
             document.querySelectorAll('.stat-number').forEach(s => statsObserver.observe(s));
 
-            // Testimonials animation
-            const testimonialCards = document.querySelectorAll('.testimonial-card');
-            const testimonialObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                        testimonialObserver.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.2,
-                rootMargin: '0px 0px -50px 0px'
-            });
-
-            testimonialCards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(40px)';
-                card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-                card.style.transitionDelay = `${index * 0.15}s`;
-                testimonialObserver.observe(card);
-            });
-
-            // Create floating effect for testimonial images
-            testimonialCards.forEach(card => {
-                const image = card.querySelector('.testimonial-image');
-                let floatY = 0;
-                let floatDirection = 1;
-                
-                function floatAnimation() {
-                    if (floatY >= 5) floatDirection = -1;
-                    if (floatY <= -5) floatDirection = 1;
-                    
-                    floatY += 0.2 * floatDirection;
-                    image.style.transform = `translateY(${floatY}px)`;
-                    requestAnimationFrame(floatAnimation);
-                }
-                
-                image.style.transition = 'transform 0.05s ease';
-                floatAnimation();
-            });
-
+        
             // Enhanced FAQ interactions
             const faqItems = document.querySelectorAll('.faqs details');
             

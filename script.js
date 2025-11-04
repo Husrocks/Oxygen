@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Hamburger menu functionality
-    const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.nav-links');
+    // const hamburger = document.querySelector('.hamburger');
+    // const navLinks = document.querySelector('.nav-links');
 
-    hamburger.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
+    // hamburger.addEventListener('click', () => {
+    //     navLinks.classList.toggle('active');
+    // });
 
     // Enhanced parallax effect
     const heroSection = document.querySelector('.hero-section');
@@ -23,3 +23,5 @@ document.addEventListener('DOMContentLoaded', () => {
         heroContent.style.opacity = Math.max(opacity, 0);
     });
 });
+
+

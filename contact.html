@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Edge Sparks - Fixed</title>
+<style>
+  html,body{height:100%;margin:0;background:#060505;}
+  /* canvas behind content */
+  canvas#bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    display:block;
+  }
+  /* content above canvas */
+  .page { position: relative; z-index: 1; color: #fff; font-family: system-ui; min-height: 300vh; }
+  section { min-height: 100vh; display:flex; align-items:center; justify-content:center; }
+  .card { background: rgba(0,0,0,0.45); padding: 2rem; border-radius: 12px; }
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<main class="page">
+  <section><div class="card"><h1>Edge Sparks — Test</h1><p>Scroll to influence spark rate.</p></div></section>
+  <section><div class="card"><h1>Section 2</h1></div></section>
+  <section><div class="card"><h1>Section 3</h1></div></section>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d', { alpha: true });
+
+  // Size variables (kept in sync with window)
+  let DPR = Math.max(window.devicePixelRatio || 1, 1);
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+
+  function resize() {
+    DPR = Math.max(window.devicePixelRatio || 1, 1);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    // scale drawing so coordinates match CSS pixels
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Spark storage
+  const particles = [];
+  const MAX = 700;
+  let lastTime = performance.now();
+  let lastScroll = window.scrollY || 0;
+  let scrollSpeed = 0; // px per second
+  let globalIntensity = 1; // affects spawn counts
+
+  // Colors (warm reds/orange)
+  const palette = ['#fff2d9','#ffd05a','#ff8a3d','#ff4e2f'];
+
+  // helpers
+  const rand = (a,b) => Math.random()*(b-a)+a;
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const lerp = (a,b,t)=> a + (b-a)*t;
+
+  // Spark class (very simple, thin streak)
+  class Spark {
+    constructor(edge, y, mode='default') {
+      this.edge = edge; // 'left' or 'right'
+      this.reset(edge, y, mode);
+    }
+    reset(edge, y, mode){
+      this.edge = edge;
+      // spawn just outside edge
+      this.x = (edge === 'left') ? rand(-8, 8) : rand(W-8, W+8);
+      this.y = (typeof y === 'number') ? y : rand(H*0.05, H*0.95);
+      // velocities: inward + upward
+      const inward = (edge === 'left') ? rand(30,140) : rand(-140,-30);
+      this.vx = inward * (mode === 'high' ? rand(1.0,1.5) : rand(0.8,1.15));
+      this.vy = rand(-240, -60) * (mode === 'high' ? rand(1.0,1.3) : 1.0);
+      this.life = rand(0.9, 2.2);
+      this.age = 0;
+      this.length = rand(8, 24);
+      this.width = rand(0.8, 2.2);
+      this.color = palette[Math.floor(Math.random()*palette.length)];
+      this.alpha = rand(0.6, 1);
+      this.rotation = rand(-0.3,0.3);
+    }
+    update(dt){
+      // add small wind from scrolling - uses scrollSpeed (px/s)
+      const wind = (scrollSpeed / 1200) * (this.edge === 'left' ? 1 : -1);
+      this.vx += wind * dt * 40;
+      // gravity-like slow down upward
+      this.vy += 40 * dt;
+      // move
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.age += dt;
+      // fade out
+      const t = this.age / this.life;
+      this.alpha = clamp((1 - t) * (0.5 + 0.5*Math.abs(Math.sin(this.age*7))), 0, 1);
+      // recycle
+      if (this.age >= this.life || this.y > H + 80 || this.x < -160 || this.x > W + 160) {
+        this.reset(this.edge, rand(H*0.05, H*0.95));
+      }
+    }
+    draw(ctx){
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      // orient streak by velocity angle
+      const ang = Math.atan2(this.vy, this.vx) + this.rotation;
+      ctx.translate(this.x, this.y);
+      ctx.rotate(ang);
+      // gradient along length
+      const g = ctx.createLinearGradient(0, 0, this.length, 0);
+      g.addColorStop(0, `rgba(255,255,255,${this.alpha*0.9})`);
+      g.addColorStop(0.12, `${hexToRgba(this.color, this.alpha*0.95)}`);
+      g.addColorStop(0.7, `${hexToRgba(this.color, this.alpha*0.45)}`);
+      g.addColorStop(1, `${hexToRgba(this.color, 0)}`);
+      ctx.fillStyle = g;
+      // thin rounded rectangle
+      roundRect(ctx, 0, -this.width/2, this.length, this.width, this.width/2);
+      // small bright head
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(255,250,240,${Math.min(1,this.alpha*1.1)})`;
+      ctx.arc(0,0, Math.max(0.6, this.width*0.7), 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function hexToRgba(hex, a=1) {
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16);
+    const g = parseInt(h.substring(2,4),16);
+    const b = parseInt(h.substring(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // spawn an edge burst (count sparks) at y position
+  function spawnEdgeBurst(edge, y, count=8, mode='default') {
+    for (let i=0;i<count;i++){
+      if (particles.length < MAX) particles.push(new Spark(edge, y, mode));
+      else {
+        // recycle a random particle
+        const idx = Math.floor(Math.random() * particles.length);
+        particles[idx].reset(edge, y + rand(-20,20), mode);
+        particles[idx].age = 0;
+      }
+    }
+  }
+
+  // maintain ambient base count
+  function ensureBase() {
+    const target = Math.min(MAX, Math.floor(BASE_COUNT * globalIntensity));
+    while (particles.length < target) {
+      const e = Math.random() > 0.5 ? 'left' : 'right';
+      const x = (e === 'left') ? rand(-8, 8) : rand(W-8, W+8);
+      particles.push(new Spark(e, rand(H*0.05, H*0.95)));
+    }
+    if (particles.length > target) particles.splice(target);
+  }
+
+  // base ambient count adaptable
+  const BASE_COUNT = (W < 720) ? 50 : 160;
+  ensureBase();
+
+  // animation loop
+  function animate(now) {
+    const dt = Math.min(0.06, (now - lastTime) / 1000);
+    lastTime = now;
+
+    // clear with slight overlay so sparks have faint trails
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = 'rgba(10,8,7,0.16)';
+    ctx.fillRect(0,0,W,H);
+
+    // compute spawn point along Y following scroll percentage
+    const maxScroll = Math.max(1, document.body.scrollHeight - H);
+    const scrollPct = (window.scrollY || 0) / maxScroll;
+    const spawnY = clamp(scrollPct * H, H*0.05, H*0.95);
+
+    // spawn rate influenced by scroll speed
+    const spawnRate = clamp(1 + (scrollSpeed / 900) * 6, 1, 8) * (0.7 + 0.8*globalIntensity);
+    // spawn probabilistically each frame
+    const toSpawn = Math.ceil(spawnRate * dt * 60);
+    for (let i=0;i<toSpawn;i++){
+      if (Math.random() < 0.6) spawnEdgeBurst('left', spawnY + rand(-40,40), Math.floor(rand(1,3)), scrollSpeed > 200 ? 'high' : 'default');
+      if (Math.random() < 0.6) spawnEdgeBurst('right', spawnY + rand(-40,40), Math.floor(rand(1,3)), scrollSpeed > 200 ? 'high' : 'default');
+    }
+
+    // update scrollSpeed (smoothed)
+    const newScroll = window.scrollY || 0;
+    const dy = newScroll - lastScroll;
+    const instant = Math.abs(dy) / (dt || 0.0001);
+    scrollSpeed = lerp(scrollSpeed, instant, 0.14);
+    lastScroll = newScroll;
+
+    ensureBase();
+
+    // update & draw particles
+    for (let i=0;i<particles.length;i++){
+      particles[i].update(dt);
+      particles[i].draw(ctx);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // begin
+  lastTime = performance.now();
+  requestAnimationFrame(animate);
+
+  // interactions: wheel/touch spawn bursts
+  let wheelTimer = null;
+  window.addEventListener('wheel', (e) => {
+    const edge = (e.clientX && e.clientX < W/2) ? 'left' : 'right';
+    spawnEdgeBurst(edge, e.clientY || H*0.9, Math.min(30, 6 + Math.abs(e.deltaY)/30), 'high');
+    globalIntensity = Math.min(2.2, globalIntensity + 0.18);
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(()=> globalIntensity = Math.max(0.9, globalIntensity - 0.18), 350);
+  }, { passive: true });
+
+  window.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    if (!t) return;
+    const edge = (t.clientX < W/2) ? 'left' : 'right';
+    spawnEdgeBurst(edge, t.clientY, 20, 'high');
+    globalIntensity = Math.min(2.0, globalIntensity + 0.25);
+    setTimeout(()=> globalIntensity = Math.max(0.9, globalIntensity - 0.25), 350);
+  }, { passive: true });
+
+  // section-based bursts (optional)
+  const sections = document.querySelectorAll('section');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        const id = en.target.id || '';
+        if (id === 's1') { globalIntensity = 1; spawnEdgeBurst('left', H*0.9, 36, 'soft'); spawnEdgeBurst('right', H*0.9, 36, 'soft'); }
+        if (id === 's2') { globalIntensity = 1.6; spawnEdgeBurst('left', H*0.9, 70, 'high'); spawnEdgeBurst('right', H*0.9, 70, 'high'); }
+        if (id === 's3') { globalIntensity = 0.9; spawnEdgeBurst('left', H*0.9, 28, 'soft'); spawnEdgeBurst('right', H*0.9, 28, 'soft'); }
+      }
+    });
+  }, { threshold: 0.45 });
+  sections.forEach(s => io.observe(s));
+
+  // pause animation when tab hidden
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(animate);
+    else { lastTime = performance.now(); requestAnimationFrame(animate); }
+  });
+
+})();
+</script>
+</body>
+</html>
